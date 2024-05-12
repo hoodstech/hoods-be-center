@@ -1,0 +1,43 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email String @unique
+  phone String? @unique
+  login String?
+  passwordHash String
+  isVerified Boolean @default(false)
+  isBlocked Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  role Role
+  sessions AuthSession[]
+}
+
+// TODO: перенести в Redis после добавления docker-конфига
+model AuthSession {
+  id String @id @db.Uuid
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @db.Uuid
+  userAgent String?
+  ip String? @db.VarChar(15)
+  fingerprint String?
+  expiresIn BigInt
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
